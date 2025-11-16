@@ -1,0 +1,15 @@
+# Rocq
+*.vo
+*.vos
+*.vok
+*.aux
+*.cache
+
+# Build System
+rocq/code
+rocq/generatedproof
+etc/build/gen
+__pycache__
+.ninja_deps
+.ninja_log
+.ninja_lock

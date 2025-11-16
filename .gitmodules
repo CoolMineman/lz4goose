@@ -1,0 +1,6 @@
+[submodule "perennial"]
+	path = vendor/perennial
+	url = https://github.com/mit-pdos/perennial
+[submodule "goose"]
+	path = vendor/goose
+	url = https://github.com/goose-lang/goose

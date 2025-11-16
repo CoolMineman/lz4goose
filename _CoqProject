@@ -1,0 +1,37 @@
+-Q rocq/lz4goose lz4goose
+-arg -w -arg +deprecated-instance-without-locality
+# don't allow ambiguous coercions
+-arg -w -arg +ambiguous-paths
+-arg -w -arg +deprecated-hint-rewrite-without-locality
+-arg -w -arg +deprecated-field-instance-without-locality
+-arg -w -arg +deprecated-tactic-notation
+# for coqutil compatibility
+-arg -w -arg -deprecated-since-8.19,-deprecated-since-8.20
+-arg -w -arg -deprecated-since-9.0,-deprecated-since-9.1,-deprecated-since-9.2
+# false positives with our byte_string
+-arg -w -arg -via-type-remapping,-via-type-mismatch
+-arg -w -arg +deprecated-typeclasses-transparency-without-locality
+-arg -w -arg -overriding-logical-loadpath
+# Iris-disabled warnings
+-arg -w -arg -notation-overridden,-redundant-canonical-projection,-notation-incompatible-prefix
+-arg -w -arg -unknown-warning
+
+# copy perennial's dependencies
+-Q vendor/perennial/external/stdpp/stdpp stdpp
+-Q vendor/perennial/external/stdpp/stdpp_unstable stdpp.unstable
+-Q vendor/perennial/external/stdpp/stdpp_bitvector stdpp.bitvector
+-Q vendor/perennial/external/iris/iris iris
+-Q vendor/perennial/external/iris/iris_deprecated iris.deprecated
+-Q vendor/perennial/external/iris/iris_unstable iris.unstable
+-Q vendor/perennial/external/iris/iris_heap_lang iris.heap_lang
+-Q vendor/perennial/external/coqutil/src/coqutil coqutil
+-Q vendor/perennial/external/record-update/src RecordUpdate
+-Q vendor/perennial/external/iris-named-props/src iris_named_props
+# perennial itself
+-Q vendor/perennial/src Perennial
+-Q vendor/perennial/new New
+-Q vendor/perennial/external/Goose Goose
+
+# local goose output
+-Q rocq/code New.code
+-Q rocq/generatedproof New.generatedproof
