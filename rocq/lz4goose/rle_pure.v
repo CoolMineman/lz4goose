@@ -61,7 +61,7 @@ Proof.
         +++ discriminate.
 Qed.
 
-(* Lemma rle_parse_roundtrip2 (bs: list w8) (ops: rle_ops) :
+Lemma rle_parse_roundtrip2 (bs: list w8) (ops: rle_ops) :
 rle_unparse(ops) = bs -> rle_parse(bs) = (true, ops).
 Proof.
   intros H.
@@ -75,7 +75,7 @@ Proof.
       +++ apply cons_eq_inj in H as [Hrep H]. apply cons_eq_inj in H as [Hv H].
         apply IHops in H. unfold rle_parse. fold rle_parse. rewrite H. rewrite Hv. rewrite Hrep.
         reflexivity.
-Qed. *)
+Qed.
 
 (* Fixpoint rle_join (a b: rle_ops) : rle_ops :=
 match a with
@@ -214,4 +214,48 @@ Proof.
     rewrite H. rewrite rle_comp_soundness.
     reflexivity.
   - rewrite rle_parse_unparse in H. discriminate H.
+Qed.
+
+Check word.add.
+
+Definition hmm (out: w64) (src: list w8) (i: w8) := 
+match (src !! (uint.nat i)), (src !! (uint.nat i)) with
+| Some runlen, Some val => let i': w64 := (word.add (W64(uint.nat i)) (W64 2)) in
+        let out' := (word.add out (W64(uint.nat runlen))) in true
+| _, _ => false
+end.
+
+Fixpoint rle_byte_decomp2 (src: list w8) : (bool * (list w8)) :=
+match (0 <? length src)%nat with
+| true =>
+  match (1%nat <? length src)%nat with
+  | false => (false, [])
+  | true =>
+    match src with
+    | runlen :: val :: src' =>
+      let (success, dst') := (rle_byte_decomp2 src') in
+      match success with
+      | true =>
+        match success with
+        | true => (true, repeat val (uint.nat runlen) ++ dst')
+        | false => (false, [])
+        end
+      | false => (false, [])
+      end
+    | _ => (false, [])
+    end
+  end
+| false => (true, [])
+end.
+
+Lemma rle_byte_decomp2_soundness (bs xs: list w8) :
+rle_logical_byte_decomp bs = (true, xs) -> rle_byte_decomp2 bs = (true, xs).
+Proof.
+  intros H. unfold rle_logical_byte_decomp in H. case_match. case_match.
+  - inversion H as [Hr]. clear H. apply rle_parse_roundtrip in H0. rewrite <- H0. clear H0 H1 b bs Hr xs.
+    induction r.
+    + reflexivity.
+    + unfold rle_unparse. fold rle_unparse. unfold rle_byte_decomp2. simpl. fold rle_byte_decomp2.
+      rewrite IHr. reflexivity.
+  - discriminate H.
 Qed.
