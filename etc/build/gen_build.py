@@ -79,26 +79,70 @@ w.rule(
 w.newline()
 w.rule(
     "get_rocq_deps",
-    "python etc/build/gen_deps.py | $out",
+    "python etc/build/gen_deps.py > $out",
     description="ROCQ DEP"
 )
 w.build(
     rule="get_rocq_deps",
     outputs="etc/build/.rocqdeps",
     implicit=all_v_files,
-    order_only=[
-        "etc/build/gen/.goose",
-        "etc/build/gen/.proofgen"
-    ]
 )
 w.newline()
 
+w.rule(
+    "cc_shared",
+    "gcc -MD -MF $out.d -shared -o $out $in"
+)
+w.build(
+    rule="cc_shared",
+    outputs="vendor/lz4/bin/lz4.so",
+    inputs="vendor/lz4/lib/lz4.c"
+)
+w.default("vendor/lz4/bin/lz4.so")
+w.newline()
+
+w.rule(
+    "ocaml",
+    "ocamlc -I ml -c $in"
+)
+w.build(
+    rule="ocaml",
+    inputs=["ml/lz4_parse.mli"],
+    outputs=["ml/lz4_parse.cmi"],
+)
+w.build(
+    rule="ocaml",
+    inputs=["ml/lz4_parse.ml"],
+    outputs=["ml/lz4_parse.cmo"],
+    implicit=["ml/lz4_parse.cmi"]
+)
+w.build(
+    rule="ocaml",
+    inputs=["ml/lz4_parse_cli.ml"],
+    outputs=["ml/lz4_parse_cli.cmo"],
+)
+w.rule(
+    "ocamlo",
+    "ocamlc -I ml -o $out $in"
+)
+w.build(
+    rule="ocamlo",
+    inputs=["ml/lz4_parse.cmo", "ml/lz4_parse_cli.cmo"],
+    outputs=["ml/bin/lz4_parse_cli"]
+)
+w.default("ml/bin/lz4_parse_cli")
+w.newline()
+
 for v_file in all_v_files:
+    implicit = []
+    if "./rocq/lz4goose/lz4_extract_spec.v" == v_file:
+        implicit += ["ml/lz4_parse.ml", "ml/lz4_parse.mli"]
     w.build(
         rule="rocq_vo",
         inputs=[v_file],
         outputs=[rext(v_file, ".v", ".vo")],
-        dyndep="etc/build/.rocqdeps"
+        order_only=["etc/build/.rocqdeps"],
+        dyndep="etc/build/.rocqdeps",
     )
 for v_file in all_v_files:
     if v_file.startswith("./rocq/"):

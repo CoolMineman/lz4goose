@@ -4,3 +4,6 @@
 [submodule "goose"]
 	path = vendor/goose
 	url = https://github.com/goose-lang/goose
+[submodule "lz4"]
+	path = vendor/lz4
+	url = https://github.com/lz4/lz4

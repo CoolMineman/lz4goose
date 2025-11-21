@@ -5,6 +5,10 @@
 *.aux
 *.cache
 
+# OCaml
+*.cmi
+*.cmo
+
 # Build System
 rocq/code
 rocq/generatedproof
@@ -13,3 +17,7 @@ __pycache__
 .ninja_deps
 .ninja_log
 .ninja_lock
+test_files
+ml/lz4_parse.ml
+ml/lz4_parse.mli
+ml/bin
