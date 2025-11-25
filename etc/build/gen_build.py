@@ -161,3 +161,26 @@ for v_file in all_v_files:
 for v_file in all_v_files:
     if v_file.startswith("./rocq/"):
         w.default(rext(v_file, ".v", ".vo"))
+w.newline()
+
+w.rule(
+    "ml_decomp",
+    "ml/bin/lz4_decomp_cli $in > $out"
+)
+w.rule(
+    "decomp_spec_test",
+    "git diff --no-index $in && touch $out"
+)
+for sample in ["pride.bin", "AAAA.bin"]:
+    w.build(
+        rule="ml_decomp",
+        inputs=[f"test_files/compressed/{sample}"],
+        outputs=[f"test_files/ml_decompressed/{sample}"],
+        implicit=["ml/bin/lz4_decomp_cli"],
+    )
+    w.build(
+        rule="decomp_spec_test",
+        inputs=[f"test_files/decompressed/{sample}", f"test_files/ml_decompressed/{sample}"],
+        outputs=[f"test_files/ml_decompressed_correct/{sample}.correct"],
+    )
+    w.default(f"test_files/ml_decompressed_correct/{sample}.correct")

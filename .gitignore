@@ -21,3 +21,4 @@ test_files
 ml/lz4_parse.ml
 ml/lz4_parse.mli
 ml/bin
+etc/build/.rocqdeps

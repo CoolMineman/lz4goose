@@ -1,7 +1,7 @@
 (* 
 Generated using Opus 4.5
 
-Prompt:
+Prompt (yes, "that lz4_decomp_cli.ml that" :[):
 """
 write a script that lz4_decomp_cli.ml that decompresses an input file using lz4_byte_decompress and prints to standard out and exits 1 on failure
 
