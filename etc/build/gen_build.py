@@ -107,41 +107,55 @@ w.rule(
 )
 w.build(
     rule="ocaml",
-    inputs=["ml/lz4_parse.mli"],
-    outputs=["ml/lz4_parse.cmi"],
+    inputs=["ml/lz4_rocq.mli"],
+    outputs=["ml/lz4_rocq.cmi"],
 )
 w.build(
     rule="ocaml",
-    inputs=["ml/lz4_parse.ml"],
-    outputs=["ml/lz4_parse.cmo"],
-    implicit=["ml/lz4_parse.cmi"]
+    inputs=["ml/lz4_rocq.ml"],
+    outputs=["ml/lz4_rocq.cmo"],
+    implicit=["ml/lz4_rocq.cmi"]
 )
-w.build(
-    rule="ocaml",
-    inputs=["ml/lz4_parse_cli.ml"],
-    outputs=["ml/lz4_parse_cli.cmo"],
-)
+# w.build(
+#     rule="ocaml",
+#     inputs=["ml/lz4_parse_cli.ml"],
+#     outputs=["ml/lz4_parse_cli.cmo"],
+# )
+# w.build(
+#     rule="ocaml",
+#     inputs=["ml/lz4_decomp_cli.ml"],
+#     outputs=["ml/lz4_decomp_cli.cmo"],
+# )
 w.rule(
     "ocamlo",
     "ocamlc -I ml -o $out $in"
 )
 w.build(
     rule="ocamlo",
-    inputs=["ml/lz4_parse.cmo", "ml/lz4_parse_cli.cmo"],
+    inputs=["ml/lz4_rocq.cmo", "ml/lz4_parse_cli.ml"],
+    implicit=["ml/lz4_rocq.cmi"],
     outputs=["ml/bin/lz4_parse_cli"]
 )
+w.build(
+    rule="ocamlo",
+    inputs=["ml/lz4_rocq.cmo", "ml/lz4_decomp_cli.ml"],
+    implicit=["ml/lz4_rocq.cmi"],
+    outputs=["ml/bin/lz4_decomp_cli"]
+)
 w.default("ml/bin/lz4_parse_cli")
+w.default("ml/bin/lz4_decomp_cli")
 w.newline()
 
 for v_file in all_v_files:
-    implicit = []
-    if "./rocq/lz4goose/lz4_extract_spec.v" == v_file:
-        implicit += ["ml/lz4_parse.ml", "ml/lz4_parse.mli"]
+    implicit_outputs = []
+    if "./rocq/lz4goose/lz4_extract.v" == v_file:
+        implicit_outputs += ["ml/lz4_rocq.ml", "ml/lz4_rocq.mli"]
     w.build(
         rule="rocq_vo",
         inputs=[v_file],
         outputs=[rext(v_file, ".v", ".vo")],
         order_only=["etc/build/.rocqdeps"],
+        implicit_outputs=implicit_outputs,
         dyndep="etc/build/.rocqdeps",
     )
 for v_file in all_v_files:

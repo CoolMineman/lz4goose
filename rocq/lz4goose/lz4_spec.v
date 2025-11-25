@@ -115,17 +115,33 @@ match skip with
   end
 end.
 
-
-(*
-
-lz4_skipn (skip: nat) (bs: list w8) {struct bs} : (bool * list w8) :=
-match skip with
-| 0%nat => (true, bs)
-| S skip' => match bs with
-  | _ :: bs' => lz4_skipn skip' bs'
-  | [] => (false, [])
+Fixpoint do_match_copy (prev: list w8) (offset: nat) (matchlen: nat): list w8 :=
+match matchlen with
+| 0%nat => prev
+| S matchlen' =>
+  match (prev !! (length prev - offset)%nat) with
+  | Some v => do_match_copy (prev ++ [v]) offset matchlen'
+  | _ => []
   end
 end.
 
+Fixpoint lz4_decompress (seq: lz4_seq) (prev: list w8) : (bool * list w8) :=
+match seq with
+| Literal bs next => lz4_decompress_cont next (prev ++ bs)
+end
+with lz4_decompress_cont (seq: lz4_seq_cont) (prev: list w8) : (bool * list w8) :=
+match seq with
+| Terminate => (true, prev)
+| MatchCopy offset matchlen next =>
+  match ((offset <? 1) && (offset <? length prev))%nat with
+  | true => (false, [])
+  | false => lz4_decompress next (do_match_copy prev offset (matchlen + 4)%nat)
+  end
+end.
 
-*)
+Definition lz4_byte_decompress (bs: list w8) : (bool * list w8) :=
+let (success, seq) := lz4_parse bs in
+match success with
+| true => lz4_decompress seq []
+| false => (false, [])
+end.

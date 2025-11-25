@@ -12,7 +12,7 @@ write an ocaml program that takes an input file and prints the result of lz4_par
 (* DRIVER CODE: lz4_parse_cli.ml                                *)
 (* ============================================================ *)
 
-open Lz4_parse
+open Lz4_rocq
 
 (* --- 1. Helpers to convert OCaml Int -> Coq Z / Nat --- *)
 

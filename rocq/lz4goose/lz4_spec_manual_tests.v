@@ -24,10 +24,18 @@ Proof.
   reflexivity.
 Qed.
 
-(* "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".encode('utf-8') *)
 Lemma parse1 :
 let (success, lz4) := lz4_parse [W8 16; W8 0] in
-success = true.
+success = true /\ lz4 = Literal [W8 0] Terminate.
 Proof.
-  reflexivity.
+  split.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+Lemma decompress1 :
+let (success, lz4) := lz4_byte_decompress [W8 16; W8 0] in
+success = true /\ lz4 = [W8 0].
+Proof.
+  split; reflexivity.
 Qed.

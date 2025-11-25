@@ -33,7 +33,7 @@ def compress_gen_test(name, in_bin):
 
 compress_gen_test('AAAA', "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".encode('utf-8'))
 
-with open("etc/testgen/samples/pride.txt", 'r') as file:
+with open("etc/tests/samples/pride.txt", 'r') as file:
     compress_gen_test('pride', file.read().encode('utf-8'))
 
 # with open('output.bin', 'wb') as file:
