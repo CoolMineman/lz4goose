@@ -3,6 +3,10 @@ import sys
 import os
 import os.path as op
 
+# Options
+o_build_test = True # run ocaml extraction spec tests
+o_build_ml_tools = False # build all cli ocaml tools
+
 def rext(s, ext, new_ext):
     return s[:len(s)-len(ext)] + new_ext
 
@@ -91,14 +95,14 @@ w.newline()
 
 w.rule(
     "cc_shared",
-    "gcc -MD -MF $out.d -shared -o $out $in"
+    "gcc -MD -MF $out.d -shared -o $out $in",
+    depfile="$out.d",
 )
 w.build(
     rule="cc_shared",
     outputs="vendor/lz4/bin/lz4.so",
     inputs="vendor/lz4/lib/lz4.c"
 )
-w.default("vendor/lz4/bin/lz4.so")
 w.newline()
 
 w.rule(
@@ -142,8 +146,9 @@ w.build(
     implicit=["ml/lz4_rocq.cmi"],
     outputs=["ml/bin/lz4_decomp_cli"]
 )
-w.default("ml/bin/lz4_parse_cli")
-w.default("ml/bin/lz4_decomp_cli")
+if o_build_ml_tools:
+    w.default("ml/bin/lz4_parse_cli")
+    w.default("ml/bin/lz4_decomp_cli")
 w.newline()
 
 for v_file in all_v_files:
@@ -171,16 +176,29 @@ w.rule(
     "decomp_spec_test",
     "git diff --no-index $in && touch $out"
 )
-for sample in ["pride.bin", "AAAA.bin"]:
+w.rule(
+    "gen_test",
+    "python etc/tests/gen_test.py $name $in"
+)
+for sample in ["pride.txt", "AAAA.txt", "smile.bmp"]:
+    sample_name = sample.split('.')[0]
+    w.build(
+        rule="gen_test",
+        inputs=["etc/tests/samples/" + sample],
+        implicit=["etc/tests/gen_test.py", "vendor/lz4/bin/lz4.so"],
+        outputs=[f"test_files/compressed/{sample_name}.bin", f"test_files/decompressed/{sample_name}.bin"],
+        variables=[("name", sample_name)]
+    )
     w.build(
         rule="ml_decomp",
-        inputs=[f"test_files/compressed/{sample}"],
-        outputs=[f"test_files/ml_decompressed/{sample}"],
+        inputs=[f"test_files/compressed/{sample_name}.bin"],
+        outputs=[f"test_files/ml_decompressed/{sample_name}.bin"],
         implicit=["ml/bin/lz4_decomp_cli"],
     )
     w.build(
         rule="decomp_spec_test",
-        inputs=[f"test_files/decompressed/{sample}", f"test_files/ml_decompressed/{sample}"],
-        outputs=[f"test_files/ml_decompressed_correct/{sample}.correct"],
+        inputs=[f"test_files/decompressed/{sample_name}.bin", f"test_files/ml_decompressed/{sample_name}.bin"],
+        outputs=[f"test_files/ml_decompressed_correct/{sample_name}.correct"],
     )
-    w.default(f"test_files/ml_decompressed_correct/{sample}.correct")
+    if o_build_test:
+        w.default(f"test_files/ml_decompressed_correct/{sample_name}.correct")

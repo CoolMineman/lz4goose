@@ -1,6 +1,11 @@
 from ctypes import CDLL
 import ctypes as ct
 
+from sys import argv
+
+sample_name = argv[1]
+sample_path = argv[2]
+
 lz4_c = CDLL("vendor/lz4/bin/lz4.so")
 
 # LZ4LIB_API int LZ4_compress_default(const char* src, char* dst, int srcSize, int dstCapacity);
@@ -31,15 +36,5 @@ def rocq_array(arr):
 def compress_gen_test(name, in_bin):
     write_test(name, in_bin, compress_lz4(in_bin))
 
-compress_gen_test('AAAA', "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".encode('utf-8'))
-
-with open("etc/tests/samples/pride.txt", 'r') as file:
-    compress_gen_test('pride', file.read().encode('utf-8'))
-
-# with open('output.bin', 'wb') as file:
-#     file.write(bytearray(compress_lz4("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".encode('utf-8'))))
-
-# with open('output2.bin', 'wb') as file:
-#     file.write(bytearray([1 << 4, 0]))
-
-# print(rocq_array(compress_lz4("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".encode('utf-8'))))
+with open(sample_path, 'rb') as file:
+    compress_gen_test(sample_name, file.read())
