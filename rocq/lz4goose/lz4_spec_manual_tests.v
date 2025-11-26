@@ -26,7 +26,7 @@ Qed.
 
 Lemma parse1 :
 let (success, lz4) := lz4_parse [W8 16; W8 0] in
-success = true /\ lz4 = Literal [W8 0] Terminate.
+success = true /\ lz4 = Literal [W8 0] (Terminate 0%nat).
 Proof.
   split.
   - reflexivity.

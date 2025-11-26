@@ -8,10 +8,11 @@ Require Import Coq.Arith.PeanoNat.
 Inductive lz4_seq :=
 | Literal (lit: list w8) (next: lz4_seq_cont)
 with lz4_seq_cont := 
-| Terminate
-| MatchCopy (offset: nat) (matchlen: nat) (next: lz4_seq).
+| Terminate (matchlen: nat) (* spec is unclear if bottom bits may be non-zero *)
+| MatchCopy (offset: w16) (matchlen: nat) (next: lz4_seq).
 
-Definition lz4_invalid_seq : lz4_seq := Literal [] Terminate.
+Definition lz4_invalid_seq_cont : lz4_seq_cont := Terminate 0%nat.
+Definition lz4_invalid_seq : lz4_seq := Literal [] lz4_invalid_seq_cont.
 
 Fixpoint var_int_parse (bs: list w8) : (bool * nat * nat) :=
 match bs with
@@ -64,7 +65,7 @@ end
 with lz4_parse_cont (matchlen_start: nat) (bs: list w8) {struct bs} : (bool * lz4_seq_cont) :=
 match bs with
 | off1 :: off2 :: bs' =>
-  let offset := (uint.nat off1 + (Nat.shiftl (uint.nat off2) 8))%nat in
+  let offset := W16 (uint.nat off1 + (Nat.shiftl (uint.nat off2) 8))%nat in
   match (matchlen_start =? 15)%nat with
   | true =>
     let (e, skip) := var_int_parse(bs') in
@@ -74,23 +75,23 @@ match bs with
       let (success2, next) := lz4_parse_skip skip bs' in
       match success2 with
       | true => (true, MatchCopy offset (matchlen_start + matchlen2) next)
-      | false => (false, Terminate)
+      | false => (false, lz4_invalid_seq_cont)
       end
-    | false => (false, Terminate)
+    | false => (false, lz4_invalid_seq_cont)
     end
   | false =>
     let (success, next) := lz4_parse(bs') in
     match success with
     | true => (true, MatchCopy offset matchlen_start next)
-    | false => (false, Terminate)
+    | false => (false, lz4_invalid_seq_cont)
     end
   end
-| [] => (true, Terminate)
-| _ => (false, Terminate)
+| [] => (true, Terminate matchlen_start)
+| _ => (false, lz4_invalid_seq_cont)
 end
 with lz4_parse_skip_then_cont (skip: nat) (matchlen_start: nat) (bs: list w8) : (bool * lz4_seq_cont) :=
 match skip with
-| 0%nat => (false, Terminate)
+| 0%nat => (false, lz4_invalid_seq_cont)
 | S skip' =>
   match bs with
   | _ :: bs' =>
@@ -98,7 +99,7 @@ match skip with
     | 0%nat => lz4_parse_cont matchlen_start bs'
     | _ => lz4_parse_skip_then_cont skip' matchlen_start bs'
     end
-  | [] => (false, Terminate)
+  | [] => (false, lz4_invalid_seq_cont)
   end
 end
 with lz4_parse_skip (skip: nat) (bs: list w8) : (bool * lz4_seq) :=
@@ -115,11 +116,11 @@ match skip with
   end
 end.
 
-Fixpoint do_match_copy (prev: list w8) (offset: nat) (matchlen: nat): list w8 :=
+Fixpoint do_match_copy (prev: list w8) (offset: w16) (matchlen: nat): list w8 :=
 match matchlen with
 | 0%nat => prev
 | S matchlen' =>
-  match (prev !! (length prev - offset)%nat) with
+  match (prev !! (length prev - uint.nat offset)%nat) with
   | Some v => do_match_copy (prev ++ [v]) offset matchlen'
   | _ => []
   end
@@ -131,9 +132,9 @@ match seq with
 end
 with lz4_decompress_cont (seq: lz4_seq_cont) (prev: list w8) : (bool * list w8) :=
 match seq with
-| Terminate => (true, prev)
+| Terminate _ => (true, prev)
 | MatchCopy offset matchlen next =>
-  match ((offset <? 1) && (offset <? length prev))%nat with
+  match ((uint.nat offset <? 1) && (uint.nat offset <? length prev))%nat with
   | true => (false, [])
   | false => lz4_decompress next (do_match_copy prev offset (matchlen + 4)%nat)
   end
