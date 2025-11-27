@@ -17,21 +17,21 @@ Lemma var_int_test4 :
 var_int_parse [W8 255; W8 10; W8 4] = (true, 265%nat, 2%nat).
 Proof. reflexivity. Qed.
 
-Lemma parse0 :
+(* Lemma parse0 :
 let (success, lz4) := lz4_parse_cont 0%nat [] in
 success = true.
 Proof.
   reflexivity.
-Qed.
+Qed. *)
 
-Lemma parse1 :
+(* Lemma parse1 :
 let (success, lz4) := lz4_parse [W8 16; W8 0] in
 success = true /\ lz4 = Literal [W8 0] (Terminate 0%nat).
 Proof.
   split.
   - reflexivity.
   - reflexivity.
-Qed.
+Qed. *)
 
 Lemma decompress1 :
 let (success, lz4) := lz4_byte_decompress [W8 16; W8 0] in
